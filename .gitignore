@@ -1,0 +1,8 @@
+selling_idea.db
+*.backup
+*.safe
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env

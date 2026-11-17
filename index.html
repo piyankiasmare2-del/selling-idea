@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selling Idea - Marketplace</title>
+<style>
+body{font-family:Arial;margin:0;background:#f2f5fa;color:#172b45}
+header{background:#123b70;color:white;text-align:center;padding:25px}
+main{max-width:650px;margin:auto;padding:16px}
+.card{background:white;padding:20px;margin:15px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,textarea,select{width:100%;padding:13px;margin:8px 0;box-sizing:border-box;border:1px solid #ccc;border-radius:7px}
+button{background:#1769d2;color:white;border:0;padding:13px;border-radius:7px;cursor:pointer}
+.idea{background:#edf4ff;padding:15px;margin:12px 0;border-radius:9px}
+.price{color:#087b45;font-weight:bold;font-size:20px}
+</style>
+</head>
+<body>
+<header>
+<h1>Selling Idea</h1>
+<p>Buy and Sell Business Ideas</p>
+</header>
+<main>
+<div class="card">
+<h2>Sell Your Business Idea</h2>
+<form id="form">
+<input id="title" placeholder="Business idea title" required>
+<input id="seller" placeholder="Your name" required>
+<select id="category" required>
+<option value="">Select category</option>
+<option>Technology</option>
+<option>Agriculture</option>
+<option>Food and Restaurant</option>
+<option>Fashion</option>
+<option>Transport</option>
+<option>Other</option>
+</select>
+<textarea id="description" placeholder="Describe your idea" required></textarea>
+<input id="price" type="number" min="1" placeholder="Selling price in USD" required>
+<button type="submit">Publish Idea</button>
+</form>
+<p id="message"></p>
+</div>
+
+<div class="card">
+<h2>Business Ideas for Sale</h2>
+<div id="list"></div>
+</div>
+</main>
+<script>
+
+let ideas = [];
+const form = document.getElementById('form');
+
+async function showIdeas() {
+    const list = document.getElementById('list');
+    list.replaceChildren();
+
+    try {
+        const response = await fetch('/ideas');
+        if (!response.ok) throw new Error('Could not load ideas');
+        ideas = await response.json();
+
+        if (!ideas.length) {
+            list.textContent = 'No ideas listed yet. Be the first to publish!';
+            return;
+        }
+
+        ideas.forEach(idea => {
+            const card = document.createElement('div');
+            card.className = 'idea';
+
+            const heading = document.createElement('h3');
+            heading.textContent = idea.title;
+
+            const category = document.createElement('p');
+            category.textContent = 'Category: ' + idea.category;
+
+            const description = document.createElement('p');
+            description.textContent = idea.description;
+
+            const seller = document.createElement('p');
+            seller.textContent = 'Seller: ' + idea.seller;
+
+            const price = document.createElement('p');
+            price.className = 'price';
+            price.textContent = '$' + idea.price;
+
+            card.append(heading, category, description, seller, price);
+            list.append(card);
+        });
+    } catch (error) {
+        list.textContent = 'Unable to load ideas. Please try again.';
+    }
+}
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const idea = {
+        title: document.getElementById('title').value,
+        seller: document.getElementById('seller').value,
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value,
+        price: document.getElementById('price').value
+    };
+
+    try {
+        const response = await fetch('/ideas', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(idea)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error);
+
+        form.reset();
+        document.getElementById('message').textContent =
+            'Your idea has been listed successfully!';
+
+        await showIdeas();
+    } catch (error) {
+        document.getElementById('message').textContent =
+            'Error: ' + error.message;
+    }
+});
+
+showIdeas();
+</script>
+</body>
+</html>
+
